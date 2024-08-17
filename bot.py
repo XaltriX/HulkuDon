@@ -28,7 +28,7 @@ Manybot_BOT = '@ManyBot'
 PERSONAL_BOT_TOKEN = '6836105234:AAFYHYLpQrecJGMVIRJHraGnHTbcON3pxxU'
 
 # Your user ID for notifications
-YOUR_USER_ID = 1837294444  # Replace with your actual Telegram user ID
+YOUR_USER_ID = 123456789  # Replace with your actual Telegram user ID
 
 # Statistics
 stats = {
@@ -223,37 +223,71 @@ async def handle_personal_bot_commands(event, personal_bot):
             try:
                 await event.reply(f"List of uploaded bots:\n{message}")
             except MessageTooLongError:
-                logger.error("Message too long, unable to send bot list.")
-                await event.reply("Message too long, unable to send bot list.")
+                logger.error("Message too long, splitting further.")
+                # If still too long, send as a file
+                with open("bot_list.txt", "w") as f:
+                    f.write(message)
+                await personal_bot.send_file(event.chat_id, "bot_list.txt", caption="List of uploaded bots")
+
+async def send_periodic_stats(personal_bot):
+    while True:
+        await asyncio.sleep(1800)  # 30 minutes
+        stats_message = (
+            f"Periodic Stats Update:\n"
+            f"Tokens uploaded: {stats['tokens_uploaded']}\n"
+            f"Total flood wait time: {stats['flood_wait_time']} seconds\n"
+            f"Total bots uploaded: {stats['total_bots_uploaded']}\n"
+            f"Total tokens in list: {stats['total_tokens']}"
+        )
+        await personal_bot.send_message(YOUR_USER_ID, stats_message)
+
+async def run_personal_bot():
+    personal_bot = TelegramClient('personal_bot_session', API_ID, API_HASH)
+    await personal_bot.start(bot_token=PERSONAL_BOT_TOKEN)
+
+    @personal_bot.on(events.NewMessage(pattern='/stats|/list_bot'))
+    async def command_handler(event):
+        await handle_personal_bot_commands(event, personal_bot)
+
+    # Start periodic stats sending
+    asyncio.create_task(send_periodic_stats(personal_bot))
+
+    await personal_bot.run_until_disconnected()
 
 async def main():
     successful_tokens = load_successful_tokens()
+    logger.info(f"Loaded {len(successful_tokens)} successful tokens from {SUCCESSFUL_BOTS_FILE}")
 
-    personal_bot = TelegramClient('personal_bot', API_ID, API_HASH)
-    await personal_bot.start(bot_token=PERSONAL_BOT_TOKEN)
+    # Start personal bot in a separate task
+    personal_bot_task = asyncio.create_task(run_personal_bot())
 
-    @personal_bot.on(events.NewMessage(incoming=True, from_users=YOUR_USER_ID))
-    async def handler(event):
-        await handle_personal_bot_commands(event, personal_bot)
-
-    tasks = []
     try:
         with open(TOKEN_FILE, 'r', encoding='utf-8') as file:
             lines = file.readlines()
-            stats['total_tokens'] = len(lines)
-            for line in lines:
-                token = extract_bot_token(line)
-                if token:
-                    tasks.append(process_token(token, successful_tokens))
-                else:
-                    logger.error(f"Invalid or incomplete token in line: {line.strip()}")
-    except EOFError:
-        logger.error("EOFError when reading the token file")
-    except Exception as e:
-        logger.error(f"Unexpected error when reading token file: {str(e)}")
+    except UnicodeDecodeError:
+        with open(TOKEN_FILE, 'r', encoding='utf-8-sig') as file:
+            lines = file.readlines()
+    except FileNotFoundError:
+        logger.error(f"Token file not found: {TOKEN_FILE}")
+        return
 
-    await asyncio.gather(*tasks)
-    await personal_bot.run_until_disconnected()
+    stats['total_tokens'] = len(lines)
+
+    for line in lines:
+        token = extract_bot_token(line.strip())
+        if token:
+            await process_token(token, successful_tokens)
+
+    logger.info("Processing complete. Successfully added bots are saved in successful_bots.txt")
+
+    # Notify user that all tokens have been processed
+    personal_bot = TelegramClient('notification_bot_session', API_ID, API_HASH)
+    await personal_bot.start(bot_token=PERSONAL_BOT_TOKEN)
+    await personal_bot.send_message(YOUR_USER_ID, "All tokens in the list have been processed.")
+    await personal_bot.disconnect()
+
+    # Wait for personal bot task to complete (which it never will, as it runs until disconnected)
+    await personal_bot_task
 
 if __name__ == '__main__':
     asyncio.run(main())
