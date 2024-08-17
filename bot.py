@@ -2,7 +2,6 @@ import asyncio
 import logging
 import re
 import random
-import time
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError, FloodWaitError, ApiIdInvalidError, MessageTooLongError
 
@@ -61,6 +60,14 @@ async def validate_token(token):
     except Exception as e:
         logger.error(f"Error validating token {token[:10]}...: {str(e)}")
         return False
+
+async def login(client):
+    await client.start()
+    if not await client.is_user_authorized():
+        phone = input("Please enter your phone number: ")
+        await client.send_code_request(phone)
+        code = input("Please enter the code you received: ")
+        await client.sign_in(phone, code)
 
 async def connect_to_Manybot(client, token):
     try:
@@ -147,7 +154,7 @@ async def process_token(token, successful_tokens):
 
     try:
         client = TelegramClient('session', API_ID, API_HASH)
-        await client.start()
+        await login(client)  # Call the login function here
         logger.info(f"Processing token: {token[:10]}...")
         bot_username = await connect_to_Manybot(client, token)
 
@@ -163,7 +170,7 @@ async def process_token(token, successful_tokens):
             await asyncio.sleep(wait_time)
         else:
             logger.warning(f"Failed to connect to Manybot for token: {token[:10]}...")
-    
+
     except FloodWaitError as e:
         logger.error(f"FloodWaitError: {str(e)}. Waiting for {e.seconds} seconds.")
         stats['flood_wait_time'] += e.seconds
@@ -174,7 +181,7 @@ async def process_token(token, successful_tokens):
 
     except Exception as e:
         logger.error(f"Error processing token {token[:10]}...: {str(e)}")
-    
+
     finally:
         if 'client' in locals() and client.is_connected():
             await client.disconnect()
