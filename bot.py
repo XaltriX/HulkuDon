@@ -28,7 +28,7 @@ Manybot_BOT = '@ManyBot'
 PERSONAL_BOT_TOKEN = '6836105234:AAFYHYLpQrecJGMVIRJHraGnHTbcON3pxxU'
 
 # Your user ID for notifications
-YOUR_USER_ID = 123456789  # Replace with your actual Telegram user ID
+YOUR_USER_ID = 1837294444  # Replace with your actual Telegram user ID
 
 # Statistics
 stats = {
