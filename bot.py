@@ -5,7 +5,6 @@ import random
 import time
 from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError, FloodWaitError, ApiIdInvalidError, MessageTooLongError
-from telethon.tl.types import InputPeerUser
 
 # Configure logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -17,16 +16,12 @@ API_HASH = 'f317b3f7bbe390346d8b46868cff0de8'
 
 # Path to the file containing bot tokens
 TOKEN_FILE = r'combined_output2.txt'
-
 # Path to the file for storing successful bots
 SUCCESSFUL_BOTS_FILE = r'successful_bots.txt'
-
 # Manybot Bot username
 Manybot_BOT = '@ManyBot'
-
 # Your personal bot token
 PERSONAL_BOT_TOKEN = '6836105234:AAFYHYLpQrecJGMVIRJHraGnHTbcON3pxxU'
-
 # Your user ID for notifications
 YOUR_USER_ID = 1837294444  # Replace with your actual Telegram user ID
 
@@ -72,7 +67,6 @@ async def connect_to_Manybot(client, token):
         logger.info("Opening Manybot...")
         await client.send_message(Manybot_BOT, '/start')
         await asyncio.sleep(random.uniform(2, 3))
-
         logger.info("Sending /addbot command...")
         await client.send_message(Manybot_BOT, '/addbot')
         await asyncio.sleep(random.uniform(2, 3))
@@ -95,7 +89,7 @@ async def connect_to_Manybot(client, token):
                 bot_username = re.search(r'@(\w+)', message.text)
                 if bot_username:
                     bot_username = bot_username.group(1)
-                break
+                    break
 
         if not bot_username:
             logger.warning("Failed to extract bot username")
@@ -103,32 +97,23 @@ async def connect_to_Manybot(client, token):
 
         logger.info("Sending bot description...")
         description = """🎬 Download & Stream Your Favorite Movies 🎥
+        🔗 https://t.me/+dfaega6Cygk3Mjc0
+        🔗 https://t.me/+dfaega6Cygk3Mjc0
+        🔥 Watch Leaked MMS, P0rn Videos, Desi Bhabhi, OYO Couples Without Ads & Verification 🔥
+        🔞 https://t.me/+KEH6sHZ70ZQzOTVk
+        🔞 https://t.me/+KEH6sHZ70ZQzOTVk
+        💎 Premium P0rn, MMS, OYO Leaked for FREE 💎
+        🔔 *Limited Seats (First 100 Requests Accepted Only)*
+        🔗 https://t.me/+5gPLYksola9hZmY0
+        🔗 https://t.me/+5gPLYksola9hZmY0
+        🎥 Watch & Download Newly Released Movies for Free 🍿
+        🔗 https://t.me/+okar7NWR04UwYjll
+        🔗 https://t.me/+okar7NWR04UwYjll
+        TeraBox Video Downloader Bot
+        🔗 https://t.me/TeraBox_Download3r_Bot
+        🔗 https://t.me/TeraBox_Download3r_Bot
+        BY @NeonGhost_Network 👻"""
 
-🔗 https://t.me/+dfaega6Cygk3Mjc0  
-🔗 https://t.me/+dfaega6Cygk3Mjc0
-
-🔥 Watch Leaked MMS, P0rn Videos, Desi Bhabhi, OYO Couples Without Ads & Verification 🔥
-
-🔞 https://t.me/+KEH6sHZ70ZQzOTVk  
-🔞 https://t.me/+KEH6sHZ70ZQzOTVk
-
-💎 Premium P0rn, MMS, OYO Leaked for FREE 💎  
-🔔 *Limited Seats (First 100 Requests Accepted Only)*
-
-🔗 https://t.me/+5gPLYksola9hZmY0  
-🔗 https://t.me/+5gPLYksola9hZmY0
-
-🎥 Watch & Download Newly Released Movies for Free 🍿
-
-🔗 https://t.me/+okar7NWR04UwYjll  
-🔗 https://t.me/+okar7NWR04UwYjll
-
-TeraBox Video Downloader Bot
-
-🔗 https://t.me/TeraBox_Download3r_Bot  
-🔗 https://t.me/TeraBox_Download3r_Bot
-
-BY @NeonGhost_Network 👻"""
         await client.send_message(Manybot_BOT, description)
         await asyncio.sleep(random.uniform(2, 3))
 
@@ -139,11 +124,13 @@ BY @NeonGhost_Network 👻"""
                 return bot_username
 
         return False
+
     except FloodWaitError as e:
         logger.error(f"FloodWaitError: {str(e)}. Waiting for {e.seconds} seconds.")
         stats['flood_wait_time'] += e.seconds
         await asyncio.sleep(e.seconds)
         return False
+
     except Exception as e:
         logger.error(f"Error connecting to Manybot: {str(e)}")
         return False
@@ -161,9 +148,9 @@ async def process_token(token, successful_tokens):
     try:
         client = TelegramClient('session', API_ID, API_HASH)
         await client.start()
-
         logger.info(f"Processing token: {token[:10]}...")
         bot_username = await connect_to_Manybot(client, token)
+
         if bot_username:
             logger.info(f"Successfully processed token: {token[:10]}...")
             successful_tokens[token] = f"@{bot_username}"
@@ -176,7 +163,7 @@ async def process_token(token, successful_tokens):
             await asyncio.sleep(wait_time)
         else:
             logger.warning(f"Failed to connect to Manybot for token: {token[:10]}...")
-
+    
     except FloodWaitError as e:
         logger.error(f"FloodWaitError: {str(e)}. Waiting for {e.seconds} seconds.")
         stats['flood_wait_time'] += e.seconds
@@ -184,13 +171,14 @@ async def process_token(token, successful_tokens):
         additional_wait = random.uniform(1200, 1800)  # 20-30 minutes
         logger.info(f"Additional wait after flood: {additional_wait:.2f} seconds")
         await asyncio.sleep(additional_wait)
+
     except Exception as e:
         logger.error(f"Error processing token {token[:10]}...: {str(e)}")
+    
     finally:
         if 'client' in locals() and client.is_connected():
             await client.disconnect()
-    
-    processed_tokens.add(token)
+        processed_tokens.add(token)
 
 async def handle_personal_bot_commands(event, personal_bot):
     command = event.message.message.split()[0].lower()
@@ -202,6 +190,7 @@ async def handle_personal_bot_commands(event, personal_bot):
             f"Total tokens in list: {stats['total_tokens']}"
         )
         await event.reply(stats_message)
+
     elif command == '/list_bot':
         successful_tokens = load_successful_tokens()
         bot_list = "\n".join([f"{token[:10]}...: {username}" for token, username in successful_tokens.items()])
@@ -209,6 +198,7 @@ async def handle_personal_bot_commands(event, personal_bot):
         # Split the message if it's too long
         max_length = 4096  # Telegram's max message length
         messages = []
+
         while bot_list:
             if len(bot_list) <= max_length:
                 messages.append(bot_list)
@@ -224,7 +214,6 @@ async def handle_personal_bot_commands(event, personal_bot):
                 await event.reply(f"List of uploaded bots:\n{message}")
             except MessageTooLongError:
                 logger.error("Message too long, splitting further.")
-                # If still too long, send as a file
                 with open("bot_list.txt", "w") as f:
                     f.write(message)
                 await personal_bot.send_file(event.chat_id, "bot_list.txt", caption="List of uploaded bots")
@@ -251,7 +240,6 @@ async def run_personal_bot():
 
     # Start periodic stats sending
     asyncio.create_task(send_periodic_stats(personal_bot))
-
     await personal_bot.run_until_disconnected()
 
 async def main():
